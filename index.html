@@ -593,19 +593,9 @@
 
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-  // ============================================================
-  // CONFIGURATION — Edit these values
-  // ============================================================
-
-  // Replace with your actual download URL (Google Drive, Dropbox, GitHub Release, etc.)
+<script>
   const DOWNLOAD_URL = "https://github.com/JacobDSiler/DiggerUE5Tester/releases/download/beta-release/Digger.zip";
-
-  // Optional: Replace with a Google Form, Formspree, or API endpoint
-  // to actually collect emails. Without this, emails are only stored in localStorage.
-  const FORM_ENDPOINT = null; // e.g. "https://formspree.io/f/YOUR_FORM_ID"
-
-  // ============================================================
+  const FORM_ENDPOINT = null;
 
   const emailInput = document.getElementById('email');
   const nameInput = document.getElementById('name');
@@ -614,7 +604,6 @@
   const submitBtn = document.getElementById('submitBtn');
   const emailError = document.getElementById('emailError');
 
-  // Enable/disable submit based on checkbox + valid email
   function validateForm() {
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim());
     submitBtn.disabled = !(emailValid && agreeCheck.checked);
@@ -638,7 +627,6 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
 
-    // Send to form endpoint if configured
     if (FORM_ENDPOINT) {
       try {
         await fetch(FORM_ENDPOINT, {
@@ -648,14 +636,18 @@
         });
       } catch (e) {
         console.log('Form submission note:', e);
-        // Continue anyway — don't block the download
       }
     }
 
-    // Log to console (you can see this in browser dev tools)
     console.log('Beta signup:', { email, name, engine, timestamp: new Date().toISOString() });
 
-    // Show download section
     document.getElementById('userName').textContent = name;
     document.getElementById('downloadBtn').href = DOWNLOAD_URL;
     document.getElementById('signupSection').style.display = 'none';
+    document.getElementById('downloadSection').style.display = 'block';
+
+    document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>
+</body>
+</html>
