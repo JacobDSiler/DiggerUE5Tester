@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digger Plugin — Closed Beta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0c10;
+    --bg-card: #12151c;
+    --bg-card-hover: #181c26;
+    --accent: #4d9fff;
+    --accent-glow: rgba(77, 159, 255, 0.15);
+    --accent-dim: #2a6bbf;
+    --earth: #c47a3a;
+    --earth-glow: rgba(196, 122, 58, 0.12);
+    --green: #3dd68c;
+    --green-dim: rgba(61, 214, 140, 0.1);
+    --text: #e2e6f0;
+    --text-dim: #7a8299;
+    --text-muted: #4a5068;
+    --border: #1e2233;
+    --border-light: #2a2f44;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30%;
+    left: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(77,159,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20%;
+    right: -15%;
+    width: 55%;
+    height: 55%;
+    background: radial-gradient(ellipse, rgba(196,122,58,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(77,159,255,0.2);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+  h1 .highlight {
+    background: linear-gradient(135deg, var(--accent), var(--earth));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 540px;
+    margin-bottom: 48px;
+  }
+
+  /* Feature pills */
+  .features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 48px;
+  }
+  .feature-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .feature-pill:hover {
+    border-color: var(--border-light);
+    background: var(--bg-card-hover);
+  }
+  .feature-pill .icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+
+  /* Steps */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 48px;
+  }
+  .step {
+    display: flex;
+    gap: 20px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .step-num.s1 { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(77,159,255,0.2); }
+  .step-num.s2 { background: var(--earth-glow); color: var(--earth); border: 1px solid rgba(196,122,58,0.2); }
+  .step-num.s3 { background: var(--green-dim); color: var(--green); border: 1px solid rgba(61,214,140,0.2); }
+  .step-content h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .step-content p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Signup card */
+  .signup-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 32px;
+  }
+  .signup-card h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .signup-card .desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus {
+    border-color: var(--accent-dim);
+  }
+  .form-group input::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* License agreement */
+  .license-box {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 20px;
+    margin-bottom: 16px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .license-box::-webkit-scrollbar { width: 6px; }
+  .license-box::-webkit-scrollbar-track { background: transparent; }
+  .license-box::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+  .license-box h4 {
+    color: var(--text);
+    font-size: 13px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .license-box ol {
+    padding-left: 20px;
+  }
+  .license-box li {
+    margin-bottom: 8px;
+  }
+  .license-box strong {
+    color: var(--text);
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    cursor: pointer;
+  }
+  .checkbox-row input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .checkbox-row span {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(77,159,255,0.15);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 4px 28px rgba(77,159,255,0.3);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  /* Download section (hidden initially) */
+  .download-section {
+    display: none;
+    animation: slideIn 0.5s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .download-card {
+    background: linear-gradient(135deg, rgba(61,214,140,0.05), rgba(77,159,255,0.05));
+    border: 1px solid rgba(61,214,140,0.2);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+  }
+  .download-card .check-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--green-dim);
+    border: 2px solid rgba(61,214,140,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 22px;
+    color: var(--green);
+  }
+  .download-card h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .download-card .welcome-msg {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    background: var(--green);
+    color: var(--bg-deep);
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-size: 15px;
+    transition: all 0.25s;
+    box-shadow: 0 4px 20px rgba(61,214,140,0.15);
+    border: none;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+  }
+  .btn-download:hover {
+    box-shadow: 0 4px 28px rgba(61,214,140,0.3);
+    transform: translateY(-1px);
+  }
+  .download-meta {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .download-meta span {
+    display: inline-block;
+    margin: 0 8px;
+  }
+
+  /* Quick start inside download */
+  .quickstart {
+    margin-top: 24px;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+  }
+  .quickstart h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .quickstart code {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+  }
+  .quickstart code:last-child { border-bottom: none; }
+  .quickstart code .num {
+    color: var(--text-muted);
+    margin-right: 10px;
+    font-size: 11px;
+  }
+  .quickstart code .hl {
+    color: var(--accent);
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .footer a:hover { color: var(--text); }
+
+  /* Error message */
+  .error-msg {
+    color: #ff6b6b;
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .container { padding: 40px 16px 60px; }
+    .features { gap: 8px; }
+    .signup-card { padding: 24px 20px; }
+    .footer { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="badge">Closed Beta</div>
+  <h1>Dig through terrain.<br><span class="highlight">Reveal what's below.</span></h1>
+  <p class="subtitle">
+    Digger is an Unreal Engine 5 plugin that lets players punch holes through landscapes in real time, revealing voxel cave systems underneath. Join the closed beta to test it in your own projects.
+  </p>
+
+  <!-- Feature pills -->
+  <div class="features">
+    <div class="feature-pill"><span class="icon">&#9673;</span> Runtime landscape holes</div>
+    <div class="feature-pill"><span class="icon">&#9653;</span> Voxel cave generation</div>
+    <div class="feature-pill"><span class="icon">&#10697;</span> One-click setup</div>
+    <div class="feature-pill"><span class="icon">&#9881;</span> UE5 source plugin</div>
+    <div class="feature-pill"><span class="icon">&#11044;</span> Sphere &amp; box shapes</div>
+    <div class="feature-pill"><span class="icon">&#8633;</span> Non-destructive</div>
+  </div>
+
+  <!-- How it works -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num s1">1</div>
+      <div class="step-content">
+        <h3>Sign up below</h3>
+        <p>Enter your email and agree to the beta testing terms. Your email is only used to send you updates about the plugin.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num s2">2</div>
+      <div class="step-content">
+        <h3>Download &amp; install</h3>
+        <p>Drop the Digger folder into your project's Plugins directory. Open UE5, let it compile, and you're ready.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num s3">3</div>
+      <div class="step-content">
+        <h3>Test &amp; report</h3>
+        <p>Try the Digger Editor Mode, dig holes, stress-test it. Report issues via the link in the welcome doc.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup form -->
+  <div class="signup-card" id="signupSection">
+    <h2>Join the Beta</h2>
+    <p class="desc">Get immediate access to the plugin source and content files.</p>
+
+    <div class="form-group">
+      <label for="email">Email address</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      <div class="error-msg" id="emailError">Please enter a valid email address.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="name">Name (optional)</label>
+      <input type="text" id="name" placeholder="How should we address you?">
+    </div>
+
+    <div class="form-group">
+      <label for="engine">UE5 version you're using</label>
+      <input type="text" id="engine" placeholder="e.g. 5.4, 5.5">
+    </div>
+
+    <!-- License -->
+    <div class="license-box">
+      <h4>Digger Plugin — Beta Testing License Agreement</h4>
+      <p>By downloading and using the Digger Plugin beta ("Software"), you agree to the following terms:</p>
+      <ol>
+        <li><strong>Grant of License.</strong> You are granted a non-exclusive, non-transferable, revocable license to use the Software solely for the purpose of testing and evaluation during the beta testing period.</li>
+        <li><strong>Restrictions.</strong> You may not: (a) redistribute, share, sublicense, or make the Software available to any third party; (b) use the Software in any commercial product, published game, or publicly released application; (c) reverse engineer, decompile, or create derivative works of the Software beyond what is necessary for testing; (d) remove or alter any proprietary notices in the Software.</li>
+        <li><strong>Feedback.</strong> Any feedback, bug reports, or suggestions you provide may be used to improve the Software without obligation or compensation to you.</li>
+        <li><strong>Confidentiality.</strong> The Software and its features are confidential. You agree not to publicly disclose, stream, record, or publish screenshots or videos of the Software without prior written permission.</li>
+        <li><strong>No Warranty.</strong> The Software is provided "as-is" without any warranty. It is beta software and may contain bugs, cause crashes, or corrupt project files. You are solely responsible for backing up your projects.</li>
+        <li><strong>Termination.</strong> This license may be revoked at any time. Upon termination, you agree to delete all copies of the Software.</li>
+        <li><strong>Data Collection.</strong> Your email address is collected solely for the purpose of sending beta updates and will not be shared with third parties.</li>
+      </ol>
+      <p style="margin-top: 12px;">Last updated: February 2026</p>
+    </div>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="agreeCheck">
+      <span>I have read and agree to the Beta Testing License Agreement above.</span>
+    </label>
+
+    <button class="btn btn-primary" id="submitBtn" disabled onclick="handleSubmit()">
+      Get Download Link
+    </button>
+  </div>
+
+  <!-- Download section (shown after signup) -->
+  <div class="download-section" id="downloadSection">
+    <div class="download-card">
+      <div class="check-icon">&#10003;</div>
+      <h2>You're in!</h2>
+      <p class="welcome-msg">Welcome to the Digger beta, <strong id="userName">tester</strong>. Here's your download:</p>
+
+      <!-- IMPORTANT: Replace this href with your actual download link -->
+      <a href="#REPLACE_WITH_YOUR_DOWNLOAD_LINK" class="btn-download" id="downloadBtn">
+        &#8595; &nbsp;Download Digger Plugin
+      </a>
+
+      <div class="download-meta">
+        <span>Source + Content</span> &middot;
+        <span>UE 5.x</span> &middot;
+        <span>~XX MB</span>
+      </div>
+
+      <div class="quickstart">
+        <h3>Quick Start</h3>
+        <code><span class="num">1.</span> Extract <span class="hl">Digger/</span> into <span class="hl">YourProject/Plugins/</span></code>
+        <code><span class="num">2.</span> Open project in UE5 — click <span class="hl">Yes</span> to compile</code>
+        <code><span class="num">3.</span> Open <span class="hl">Digger Editor Mode</span> from the Modes toolbar</code>
+        <code><span class="num">4.</span> Click <span class="hl">Setup Landscape for Dynamic Holes</span></code>
+        <code><span class="num">5.</span> Select dig tool and click the landscape to dig!</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>Digger Plugin &copy; 2026</span>
+    <span>Questions? <a href="mailto:your@email.com">your@email.com</a></span>
+  </div>
+
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURATION — Edit these values
+  // ============================================================
+
+  // Replace with your actual download URL (Google Drive, Dropbox, GitHub Release, etc.)
+  const DOWNLOAD_URL = "#REPLACE_WITH_YOUR_DOWNLOAD_LINK";
+
+  // Optional: Replace with a Google Form, Formspree, or API endpoint
+  // to actually collect emails. Without this, emails are only stored in localStorage.
+  const FORM_ENDPOINT = null; // e.g. "https://formspree.io/f/YOUR_FORM_ID"
+
+  // ============================================================
+
+  const emailInput = document.getElementById('email');
+  const nameInput = document.getElementById('name');
+  const engineInput = document.getElementById('engine');
+  const agreeCheck = document.getElementById('agreeCheck');
+  const submitBtn = document.getElementById('submitBtn');
+  const emailError = document.getElementById('emailError');
+
+  // Enable/disable submit based on checkbox + valid email
+  function validateForm() {
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim());
+    submitBtn.disabled = !(emailValid && agreeCheck.checked);
+    if (emailInput.value.trim() && !emailValid) {
+      emailError.style.display = 'block';
+    } else {
+      emailError.style.display = 'none';
+    }
+  }
+
+  emailInput.addEventListener('input', validateForm);
+  agreeCheck.addEventListener('change', validateForm);
+
+  async function handleSubmit() {
+    const email = emailInput.value.trim();
+    const name = nameInput.value.trim() || 'tester';
+    const engine = engineInput.value.trim();
+
+    if (!email) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+
+    // Send to form endpoint if configured
+    if (FORM_ENDPOINT) {
+      try {
+        await fetch(FORM_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email, name, engine, timestamp: new Date().toISOString() })
+        });
+      } catch (e) {
+        console.log('Form submission note:', e);
+        // Continue anyway — don't block the download
+      }
+    }
+
+    // Log to console (you can see this in browser dev tools)
+    console.log('Beta signup:', { email, name, engine, timestamp: new Date().toISOString() });
+
+    // Show download section
+    document.getElementById('userName').textContent = name;
+    document.getElementById('downloadBtn').href = DOWNLOAD_URL;
+    document.getElementById('signupSection').style.display = 'none';
+    document.getElementById('downloadSection').style.display = 'block';
+
+    // Scroll to download
+    document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>
+
+</body>
+</html>
