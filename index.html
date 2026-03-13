@@ -6,6 +6,8 @@
 <title>Digger Plugin — Closed Beta</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Cloudflare Turnstile -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   :root {
     --bg-deep: #0a0c10;
@@ -297,6 +299,82 @@
   .btn-primary:active:not(:disabled) {
     transform: translateY(0);
   }
+
+  /* Verification step */
+  .verify-card {
+    display: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 32px;
+    animation: slideIn 0.5s ease-out;
+  }
+  .verify-card h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .verify-card .desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .verify-card .desc strong {
+    color: var(--accent);
+  }
+  .code-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .code-input-row input {
+    flex: 1;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .code-input-row input:focus {
+    border-color: var(--accent-dim);
+  }
+  .code-input-row input::placeholder {
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .resend-link {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    display: block;
+  }
+  .resend-link a {
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .resend-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* Turnstile widget styling */
+  .turnstile-wrapper {
+    margin-bottom: 20px;
+  }
+
+  /* Download section */
   .download-section {
     display: none;
     animation: slideIn 0.5s ease-out;
@@ -416,21 +494,39 @@
     margin-top: 8px;
     display: none;
   }
+  .status-msg {
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+  .status-msg.error { color: #ff6b6b; }
+  .status-msg.success { color: var(--green); }
+
+  /* Loading spinner on buttons */
+  .btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
   @media (max-width: 600px) {
     .container { padding: 40px 16px 60px; }
     .features { gap: 8px; }
-    .signup-card { padding: 24px 20px; }
+    .signup-card, .verify-card { padding: 24px 20px; }
     .footer { flex-direction: column; gap: 8px; text-align: center; }
   }
 </style>
 </head>
 <body>
 <div class="container">
+
+  <!-- Header -->
   <div class="badge">Closed Beta</div>
   <h1>Dig through terrain.<br><span class="highlight">Reveal what's below.</span></h1>
   <p class="subtitle">
     Digger is an Unreal Engine 5 plugin that lets players punch holes through landscapes in real time, revealing voxel cave systems underneath. Join the closed beta to test it in your own projects.
   </p>
+
+  <!-- Feature pills -->
   <div class="features">
     <div class="feature-pill"><span class="icon">&#9673;</span> Runtime landscape holes</div>
     <div class="feature-pill"><span class="icon">&#9653;</span> Voxel cave generation</div>
@@ -439,12 +535,14 @@
     <div class="feature-pill"><span class="icon">&#11044;</span> Sphere &amp; box shapes</div>
     <div class="feature-pill"><span class="icon">&#8633;</span> Non-destructive</div>
   </div>
+
+  <!-- How it works -->
   <div class="steps">
     <div class="step">
       <div class="step-num s1">1</div>
       <div class="step-content">
-        <h3>Sign up below</h3>
-        <p>Enter your email and agree to the beta testing terms. Your email is only used to send you updates about the plugin.</p>
+        <h3>Sign up &amp; verify</h3>
+        <p>Enter your email and agree to the beta terms. We'll send a verification code to confirm your address.</p>
       </div>
     </div>
     <div class="step">
@@ -462,22 +560,31 @@
       </div>
     </div>
   </div>
+
+  <!-- ============================== -->
+  <!-- STEP 1: Signup form            -->
+  <!-- ============================== -->
   <div class="signup-card" id="signupSection">
     <h2>Join the Beta</h2>
     <p class="desc">Get immediate access to the plugin source and content files.</p>
+
     <div class="form-group">
       <label for="email">Email address</label>
       <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
       <div class="error-msg" id="emailError">Please enter a valid email address.</div>
     </div>
+
     <div class="form-group">
       <label for="name">Name (optional)</label>
       <input type="text" id="name" placeholder="How should we address you?">
     </div>
+
     <div class="form-group">
       <label for="engine">UE5 version you're using</label>
       <input type="text" id="engine" placeholder="e.g. 5.4, 5.5">
     </div>
+
+    <!-- License -->
     <div class="license-box">
       <h4>Digger Plugin — Beta Testing License Agreement</h4>
       <p>By downloading and using the Digger Plugin beta ("Software"), you agree to the following terms:</p>
@@ -492,27 +599,66 @@
       </ol>
       <p style="margin-top: 12px;">Last updated: February 2026</p>
     </div>
+
     <label class="checkbox-row">
       <input type="checkbox" id="agreeCheck">
       <span>I have read and agree to the Beta Testing License Agreement above.</span>
     </label>
+
+    <!-- Cloudflare Turnstile widget -->
+    <!-- REPLACE the data-sitekey value with YOUR Turnstile Site Key -->
+    <div class="turnstile-wrapper">
+      <div class="cf-turnstile" data-sitekey="YOUR_TURNSTILE_SITE_KEY_HERE" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired" data-theme="dark"></div>
+    </div>
+
     <button class="btn btn-primary" id="submitBtn" disabled onclick="handleSubmit()">
-      Get Download Link
+      Send Verification Code
     </button>
+    <div class="status-msg" id="submitStatus"></div>
   </div>
+
+  <!-- ============================== -->
+  <!-- STEP 2: Enter verification code -->
+  <!-- ============================== -->
+  <div class="verify-card" id="verifySection">
+    <h2>Check your email</h2>
+    <p class="desc">
+      We sent a 6-digit verification code to <strong id="verifyEmail"></strong>. Enter it below to unlock your download.
+    </p>
+
+    <div class="code-input-row">
+      <input type="text" id="codeInput" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+    </div>
+
+    <span class="resend-link">
+      Didn't get it? Check your spam folder, or <a onclick="handleResend()">resend the code</a>.
+    </span>
+
+    <button class="btn btn-primary" id="verifyBtn" disabled onclick="handleVerify()">
+      Verify &amp; Download
+    </button>
+    <div class="status-msg" id="verifyStatus"></div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- STEP 3: Download               -->
+  <!-- ============================== -->
   <div class="download-section" id="downloadSection">
     <div class="download-card">
       <div class="check-icon">&#10003;</div>
       <h2>You're in!</h2>
       <p class="welcome-msg">Welcome to the Digger beta, <strong id="userName">tester</strong>. Here's your download:</p>
-      <a href="https://github.com/JacobDSiler/DiggerUE5Tester/releases/download/beta-release/Digger.zip" class="btn-download" id="downloadBtn">
+
+      <a href="#" class="btn-download" id="downloadBtn">
         &#8595; &nbsp;Download Digger Plugin
       </a>
+
       <div class="download-meta">
         <span>Source + Content</span> &middot;
         <span>UE 5.x</span> &middot;
         <span>.zip</span>
       </div>
+
       <div class="quickstart">
         <h3>Quick Start</h3>
         <code><span class="num">1.</span> Extract <span class="hl">Digger/</span> into <span class="hl">YourProject/Plugins/</span></code>
@@ -523,55 +669,201 @@
       </div>
     </div>
   </div>
+
+  <!-- Footer -->
   <div class="footer">
     <span>Digger Plugin &copy; 2026</span>
-    <span>Questions? jacob.siler91@gmail.com</span>
+    <span>Questions? jacob.d.siler@gmail.com</span>
   </div>
+
 </div>
+
 <script>
-  const DOWNLOAD_URL = "https://github.com/JacobDSiler/DiggerUE5Tester/releases/download/beta-release/Digger.zip";
-  const FORM_ENDPOINT = null;
+  // ============================================================
+  // CONFIGURATION — Replace these with your actual values
+  // ============================================================
+
+  // Your Cloudflare Worker URL (after deploying with wrangler)
+  // It will look like: https://digger-beta-worker.YOUR_SUBDOMAIN.workers.dev
+  const WORKER_URL = "https://digger-beta-worker.YOUR_SUBDOMAIN.workers.dev";
+
+  // ============================================================
+
+  // DOM elements
   const emailInput = document.getElementById('email');
   const nameInput = document.getElementById('name');
   const engineInput = document.getElementById('engine');
   const agreeCheck = document.getElementById('agreeCheck');
   const submitBtn = document.getElementById('submitBtn');
+  const submitStatus = document.getElementById('submitStatus');
   const emailError = document.getElementById('emailError');
+  const codeInput = document.getElementById('codeInput');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const verifyStatus = document.getElementById('verifyStatus');
+
+  // State
+  let turnstileToken = null;
+  let submittedEmail = '';
+  let submittedName = '';
+
+  // Turnstile callbacks
+  function onTurnstileSuccess(token) {
+    turnstileToken = token;
+    validateForm();
+  }
+  function onTurnstileExpired() {
+    turnstileToken = null;
+    validateForm();
+  }
+
+  // Form validation
   function validateForm() {
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim());
-    submitBtn.disabled = !(emailValid && agreeCheck.checked);
+    submitBtn.disabled = !(emailValid && agreeCheck.checked && turnstileToken);
     if (emailInput.value.trim() && !emailValid) {
       emailError.style.display = 'block';
     } else {
       emailError.style.display = 'none';
     }
   }
+
   emailInput.addEventListener('input', validateForm);
   agreeCheck.addEventListener('change', validateForm);
+
+  // Code input validation
+  codeInput.addEventListener('input', function() {
+    // Only allow digits
+    this.value = this.value.replace(/\D/g, '');
+    verifyBtn.disabled = this.value.length !== 6;
+  });
+
+  // Show status message
+  function showStatus(el, msg, type) {
+    el.textContent = msg;
+    el.className = 'status-msg ' + type;
+    el.style.display = 'block';
+  }
+  function hideStatus(el) {
+    el.style.display = 'none';
+  }
+
+  // -------------------------------------------------------
+  // STEP 1: Send verification code
+  // -------------------------------------------------------
   async function handleSubmit() {
     const email = emailInput.value.trim();
     const name = nameInput.value.trim() || 'tester';
     const engine = engineInput.value.trim();
-    if (!email) return;
+
+    if (!email || !turnstileToken) return;
+
+    submittedEmail = email;
+    submittedName = name;
+
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing...';
-    if (FORM_ENDPOINT) {
-      try {
-        await fetch(FORM_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ email, name, engine, timestamp: new Date().toISOString() })
-        });
-      } catch (e) {
-        console.log('Form submission note:', e);
+    submitBtn.classList.add('loading');
+    submitBtn.textContent = 'Sending code...';
+    hideStatus(submitStatus);
+
+    try {
+      const res = await fetch(WORKER_URL + '/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          name,
+          engine,
+          turnstileToken,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showStatus(submitStatus, data.error || 'Something went wrong.', 'error');
+        submitBtn.textContent = 'Send Verification Code';
+        submitBtn.classList.remove('loading');
+        // Reset Turnstile for retry
+        if (window.turnstile) turnstile.reset();
+        turnstileToken = null;
+        validateForm();
+        return;
       }
+
+      // Success — show verification step
+      document.getElementById('signupSection').style.display = 'none';
+      document.getElementById('verifySection').style.display = 'block';
+      document.getElementById('verifyEmail').textContent = email;
+      codeInput.focus();
+
+    } catch (err) {
+      console.error('Submit error:', err);
+      showStatus(submitStatus, 'Network error. Please check your connection and try again.', 'error');
+      submitBtn.textContent = 'Send Verification Code';
+      submitBtn.classList.remove('loading');
     }
-    console.log('Beta signup:', { email, name, engine, timestamp: new Date().toISOString() });
-    document.getElementById('userName').textContent = name;
-    document.getElementById('downloadBtn').href = DOWNLOAD_URL;
-    document.getElementById('signupSection').style.display = 'none';
-    document.getElementById('downloadSection').style.display = 'block';
-    document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // -------------------------------------------------------
+  // STEP 2: Verify code
+  // -------------------------------------------------------
+  async function handleVerify() {
+    const code = codeInput.value.trim();
+    if (code.length !== 6) return;
+
+    verifyBtn.disabled = true;
+    verifyBtn.classList.add('loading');
+    verifyBtn.textContent = 'Verifying...';
+    hideStatus(verifyStatus);
+
+    try {
+      const res = await fetch(WORKER_URL + '/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: submittedEmail,
+          code,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showStatus(verifyStatus, data.error || 'Verification failed.', 'error');
+        verifyBtn.textContent = 'Verify & Download';
+        verifyBtn.classList.remove('loading');
+        verifyBtn.disabled = false;
+        return;
+      }
+
+      // Success — show download
+      document.getElementById('verifySection').style.display = 'none';
+      document.getElementById('userName').textContent = submittedName;
+      document.getElementById('downloadBtn').href = data.downloadUrl;
+      document.getElementById('downloadSection').style.display = 'block';
+      document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    } catch (err) {
+      console.error('Verify error:', err);
+      showStatus(verifyStatus, 'Network error. Please try again.', 'error');
+      verifyBtn.textContent = 'Verify & Download';
+      verifyBtn.classList.remove('loading');
+      verifyBtn.disabled = false;
+    }
+  }
+
+  // -------------------------------------------------------
+  // Resend code
+  // -------------------------------------------------------
+  async function handleResend() {
+    // Reset Turnstile and go back to signup form
+    document.getElementById('verifySection').style.display = 'none';
+    document.getElementById('signupSection').style.display = 'block';
+    submitBtn.textContent = 'Send Verification Code';
+    submitBtn.classList.remove('loading');
+    if (window.turnstile) turnstile.reset();
+    turnstileToken = null;
+    validateForm();
   }
 </script>
 </body>
